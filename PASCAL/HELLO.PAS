@@ -1,5 +1,5 @@
 Program Hello;
 
 Begin
-  WriteLn('Hello World');
+  WriteLn('Hello World!');
 End.
