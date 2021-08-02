@@ -59,7 +59,7 @@ c2_video::draw_line(unsigned int x1, unsigned int y1, unsigned int x2, unsigned 
   if(x1 > 320 || x2 > 320 || y1 > 200 || y2 > 200)
     return 0;
 
-  int i,dx,dy,sdx,sdy,dxabs,dyabs,x,y,px,py;
+  int dx,dy,sdx,sdy,dxabs,dyabs,x,y,px,py;
 
   dx=x2-x1;      /* the horizontal distance of the line */
   dy=y2-y1;      /* the vertical distance of the line */
@@ -76,7 +76,7 @@ c2_video::draw_line(unsigned int x1, unsigned int y1, unsigned int x2, unsigned 
 
   if (dxabs>=dyabs) /* the line is more horizontal than vertical */
   {
-    for(i=0;i<dxabs;i++)
+    for(int i=0;i<dxabs;i++)
     {
       y+=dyabs;
       if (y>=dxabs)
@@ -90,7 +90,7 @@ c2_video::draw_line(unsigned int x1, unsigned int y1, unsigned int x2, unsigned 
   }
   else /* the line is more vertical than horizontal */
   {
-    for(i=0;i<dyabs;i++)
+    for(int i=0;i<dyabs;i++)
     {
       x+=dxabs;
       if (x>=dyabs)
