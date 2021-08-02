@@ -9,13 +9,14 @@
 
 
 class c2_video {
-  private:
-    unsigned char far *raw;
   public:
     c2_video();
     ~c2_video();
     int put_pixel(unsigned int, unsigned int, unsigned char);
     int draw_line(unsigned int, unsigned int, unsigned int, unsigned int, unsigned char);
+  private:
+    unsigned char far *raw;
+    inline void put_pixel_unsafe(unsigned int, unsigned int, unsigned char);
 };
 
 
@@ -30,6 +31,12 @@ c2_video::c2_video()
   raw = (unsigned char far *)0xa0000000;
 }
 
+inline void
+c2_video::put_pixel_unsafe(unsigned int x, unsigned int y, unsigned char color)
+{
+  raw[(y<<8)+(y<<6)+x] = color;
+}
+
 int
 c2_video::put_pixel(unsigned int x, unsigned int y, unsigned char color)
 {
@@ -37,7 +44,7 @@ c2_video::put_pixel(unsigned int x, unsigned int y, unsigned char color)
     return 0;
   if(y >= 200)
     return 0;
-  raw[(y<<8)+(y<<6)+x] = color;
+  put_pixel_unsafe(x,y,color);
   return 1;
 }
 
@@ -49,38 +56,27 @@ inline int int_sign(int x)
 int
 c2_video::draw_line(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2, unsigned char color)
 {
-  int dx,dy,sdx,sdy,px,py,dxabs,dyabs,i;
-  float slope;
+  int dx,dy,sdx,sdy;
 
   if(x1 > 320 || x2 > 320 || y1 > 200 || y2 > 200)
     return 0;
 
   dx=x2-x1;
   dy=y2-y1;
-  dxabs=abs(dx);
-  dyabs=abs(dy);
   sdx=int_sign(dx);
   sdy=int_sign(dy);
 
-  if(dxabs>=dyabs)
+  if(abs(dx) >= abs(dy))
   {
-    slope = (float)dy / (float)dx;
-    for(i=0; i != dx; i += sdx)
-    {
-      px = i + x1;
-      py = slope*i + y1;
-      put_pixel(px,py,color);
-    }
+    float slope = (float)dy / (float)dx;
+    for(int i=0; i != dx; i += sdx)
+      put_pixel_unsafe(i+x1, slope*i + y1, color);
   }
   else
   {
-    slope = (float)dx / (float)dy;
-    for(i=0; i != dy; i += sdy)
-    {
-      px = slope*i + x1;
-      py = i + y1;
-      put_pixel(px,py,color);
-    }
+    float slope = (float)dx / (float)dy;
+    for(int i=0; i != dy; i += sdy)
+      put_pixel_unsafe(slope*i + x1, i + y1, color);
   }
 
   return 1;
