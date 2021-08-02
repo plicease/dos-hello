@@ -12,11 +12,11 @@ class c2_video {
   public:
     c2_video();
     ~c2_video();
-    int put_pixel(unsigned int, unsigned int, unsigned char);
+    int draw_pixel(unsigned int, unsigned int, unsigned char);
     int draw_line(unsigned int, unsigned int, unsigned int, unsigned int, unsigned char);
   private:
     unsigned char far *raw;
-    inline void put_pixel_unsafe(unsigned int, unsigned int, unsigned char);
+    inline void draw_pixel_unsafe(unsigned int, unsigned int, unsigned char);
 };
 
 
@@ -32,19 +32,19 @@ c2_video::c2_video()
 }
 
 inline void
-c2_video::put_pixel_unsafe(unsigned int x, unsigned int y, unsigned char color)
+c2_video::draw_pixel_unsafe(unsigned int x, unsigned int y, unsigned char color)
 {
   raw[(y<<8)+(y<<6)+x] = color;
 }
 
 int
-c2_video::put_pixel(unsigned int x, unsigned int y, unsigned char color)
+c2_video::draw_pixel(unsigned int x, unsigned int y, unsigned char color)
 {
   if(x >= 320)
     return 0;
   if(y >= 200)
     return 0;
-  put_pixel_unsafe(x,y,color);
+  draw_pixel_unsafe(x,y,color);
   return 1;
 }
 
@@ -56,29 +56,52 @@ inline int int_sign(int x)
 int
 c2_video::draw_line(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2, unsigned char color)
 {
-  int dx,dy,sdx,sdy;
-
   if(x1 > 320 || x2 > 320 || y1 > 200 || y2 > 200)
     return 0;
 
-  dx=x2-x1;
-  dy=y2-y1;
+  int i,dx,dy,sdx,sdy,dxabs,dyabs,x,y,px,py;
+
+  dx=x2-x1;      /* the horizontal distance of the line */
+  dy=y2-y1;      /* the vertical distance of the line */
+  dxabs=abs(dx);
+  dyabs=abs(dy);
   sdx=int_sign(dx);
   sdy=int_sign(dy);
+  x=dyabs>>1;
+  y=dxabs>>1;
+  px=x1;
+  py=y1;
 
-  if(abs(dx) >= abs(dy))
-  {
-    float slope = (float)dy / (float)dx;
-    for(int i=0; i != dx; i += sdx)
-      put_pixel_unsafe(i+x1, slope*i + y1, color);
-  }
-  else
-  {
-    float slope = (float)dx / (float)dy;
-    for(int i=0; i != dy; i += sdy)
-      put_pixel_unsafe(slope*i + x1, i + y1, color);
-  }
+  raw[(py<<8)+(py<<6)+px]=color;
 
+  if (dxabs>=dyabs) /* the line is more horizontal than vertical */
+  {
+    for(i=0;i<dxabs;i++)
+    {
+      y+=dyabs;
+      if (y>=dxabs)
+      {
+        y-=dxabs;
+        py+=sdy;
+      }
+      px+=sdx;
+      draw_pixel_unsafe(px,py,color);
+    }
+  }
+  else /* the line is more vertical than horizontal */
+  {
+    for(i=0;i<dyabs;i++)
+    {
+      x+=dxabs;
+      if (x>=dyabs)
+      {
+        x-=dyabs;
+        px+=sdx;
+      }
+      py+=sdy;
+      draw_pixel_unsafe(px,py,color);
+    }
+  }
   return 1;
 }
 
@@ -99,7 +122,7 @@ main(int argc, char *argv[])
   c2_video v;
   for(i=0; i < 10; i++)
   {
-    v.put_pixel(i,i,i);
+    v.draw_pixel(i,i,i);
   }
 
   v.draw_line(20,20,30,40,15);
